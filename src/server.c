@@ -1348,14 +1348,12 @@ int serverCron(struct aeEventLoop *eventLoop, long long id, void *clientData) {
         /* Trigger an AOF rewrite if needed. */
         if (server.aof_state == AOF_ON &&
             !hasActiveChildProcess() &&
-            ((server.aof_rewrite_perc &&
-            server.aof_current_size > server.aof_rewrite_min_size) ||
-            server.aof_max_incr_size))
+            (server.aof_rewrite_perc || server.aof_max_incr_size))
         {
             long long base = server.aof_rewrite_base_size ?
                 server.aof_rewrite_base_size : 1;
             long long growth = (server.aof_current_size*100/base) - 100;
-            if (growth >= server.aof_rewrite_perc && !aofRewriteLimited()) {
+            if (server.aof_current_size > server.aof_rewrite_min_size && growth >= server.aof_rewrite_perc && !aofRewriteLimited()) {
                 serverLog(LL_NOTICE,"Starting automatic rewriting of AOF on %lld%% growth",growth);
                 rewriteAppendOnlyFileBackground();
             } else if (server.aof_last_incr_size >= server.aof_max_incr_size) {
