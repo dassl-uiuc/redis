@@ -1402,12 +1402,12 @@ int loadSingleAppendOnlyFile(char *filename) {
         }
     }
 
-    // if (fp && (ret = redis_fstat(fileno(fp),&sb)) != -1 && sb.st_size == 0) {
-    //     printf("fd %d ret %d size %ld\n", fileno(fp), ret, sb.st_size);
-    //     fclose(fp);
-    //     sdsfree(aof_filepath);
-    //     return AOF_EMPTY;
-    // }
+    if (fp && (ret = redis_fstat(fileno(fp),&sb)) != -1 && sb.st_size == 0) {
+        printf("fd %d ret %d size %ld\n", fileno(fp), ret, sb.st_size);
+        fclose(fp);
+        sdsfree(aof_filepath);
+        return AOF_EMPTY;
+    }
 
     /* Temporarily disable AOF, to prevent EXEC from feeding a MULTI
      * to the same file we're about to read. */
