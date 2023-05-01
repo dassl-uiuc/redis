@@ -1382,7 +1382,13 @@ int loadSingleAppendOnlyFile(char *filename) {
     int ret = AOF_OK;
 
     sds aof_filepath = makePath(server.aof_dirname, filename);
-    FILE *fp = fopen(aof_filepath, "r");
+    size_t len = strlen(aof_filepath);
+    FILE *fp;
+    if (strcmp(aof_filepath + len - 3, "aof") == 0) {
+        fp = fopen(aof_filepath, "rl");
+    } else {
+        fp = fopen(aof_filepath, "r");
+    }
     if (fp == NULL) {
         int en = errno;
         if (redis_stat(aof_filepath, &sb) == 0 || errno != ENOENT) {
@@ -1396,11 +1402,12 @@ int loadSingleAppendOnlyFile(char *filename) {
         }
     }
 
-    if (fp && redis_fstat(fileno(fp),&sb) != -1 && sb.st_size == 0) {
-        fclose(fp);
-        sdsfree(aof_filepath);
-        return AOF_EMPTY;
-    }
+    // if (fp && (ret = redis_fstat(fileno(fp),&sb)) != -1 && sb.st_size == 0) {
+    //     printf("fd %d ret %d size %ld\n", fileno(fp), ret, sb.st_size);
+    //     fclose(fp);
+    //     sdsfree(aof_filepath);
+    //     return AOF_EMPTY;
+    // }
 
     /* Temporarily disable AOF, to prevent EXEC from feeding a MULTI
      * to the same file we're about to read. */
@@ -2352,7 +2359,7 @@ int rewriteAppendOnlyFile(char *filename) {
 
     /* Note that we have to use a different temp name here compared to the
      * one used by rewriteAppendOnlyFileBackground() function. */
-    snprintf(tmpfile,256,"temp-rewriteaof-%d.aof", (int) getpid());
+    snprintf(tmpfile,256,"temp-rewriteaof-%d.rdb", (int) getpid());
     fp = fopen(tmpfile,"w");
     if (!fp) {
         serverLog(LL_WARNING, "Opening the temp file for AOF rewrite in rewriteAppendOnlyFile(): %s", strerror(errno));
@@ -2446,7 +2453,7 @@ int rewriteAppendOnlyFileBackground(void) {
         /* Child */
         redisSetProcTitle("redis-aof-rewrite");
         redisSetCpuAffinity(server.aof_rewrite_cpulist);
-        snprintf(tmpfile,256,"temp-rewriteaof-bg-%d.aof", (int) getpid());
+        snprintf(tmpfile,256,"temp-rewriteaof-bg-%d.rdb", (int) getpid());
         if (rewriteAppendOnlyFile(tmpfile) == C_OK) {
             serverLog(LL_NOTICE,
                 "Successfully created the temporary AOF base file %s", tmpfile);
@@ -2493,10 +2500,10 @@ void bgrewriteaofCommand(client *c) {
 void aofRemoveTempFile(pid_t childpid) {
     char tmpfile[256];
 
-    snprintf(tmpfile,256,"temp-rewriteaof-bg-%d.aof", (int) childpid);
+    snprintf(tmpfile,256,"temp-rewriteaof-bg-%d.rdb", (int) childpid);
     bg_unlink(tmpfile);
 
-    snprintf(tmpfile,256,"temp-rewriteaof-%d.aof", (int) childpid);
+    snprintf(tmpfile,256,"temp-rewriteaof-%d.rdb", (int) childpid);
     bg_unlink(tmpfile);
 }
 
@@ -2572,7 +2579,7 @@ void backgroundRewriteDoneHandler(int exitcode, int bysignal) {
         serverLog(LL_NOTICE,
             "Background AOF rewrite terminated with success");
 
-        snprintf(tmpfile, 256, "temp-rewriteaof-bg-%d.aof",
+        snprintf(tmpfile, 256, "temp-rewriteaof-bg-%d.rdb",
             (int)server.child_pid);
 
         serverAssert(server.aof_manifest != NULL);
