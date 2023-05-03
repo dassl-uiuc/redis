@@ -1629,6 +1629,8 @@ cleanup:
 
 /* Load the AOF files according the aofManifest pointed by am. */
 int loadAppendOnlyFiles(aofManifest *am) {
+    long long load_start = ustime();
+
     serverAssert(am != NULL);
     int status, ret = AOF_OK;
     long long start;
@@ -1686,8 +1688,8 @@ int loadAppendOnlyFiles(aofManifest *am) {
         start = ustime();
         ret = loadSingleAppendOnlyFile(aof_name);
         if (ret == AOF_OK || (ret == AOF_TRUNCATED && last_file)) {
-            serverLog(LL_NOTICE, "DB loaded from base file %s: %.3f seconds",
-                aof_name, (float)(ustime()-start)/1000000);
+            serverLog(LL_NOTICE, "DB loaded from base file %s: %lld microseconds",
+                aof_name, (ustime()-start));
         }
 
         /* If the truncated file is not the last file, we consider this to be a fatal error. */
@@ -1716,8 +1718,8 @@ int loadAppendOnlyFiles(aofManifest *am) {
             start = ustime();
             ret = loadSingleAppendOnlyFile(aof_name);
             if (ret == AOF_OK || (ret == AOF_TRUNCATED && last_file)) {
-                serverLog(LL_NOTICE, "DB loaded from incr file %s: %.3f seconds",
-                    aof_name, (float)(ustime()-start)/1000000);
+                serverLog(LL_NOTICE, "DB loaded from incr file %s: %lld microseconds",
+                    aof_name, (ustime()-start));
             }
 
             /* We know that (at least) one of the AOF files has data (total_size > 0),
@@ -1751,6 +1753,7 @@ int loadAppendOnlyFiles(aofManifest *am) {
 
 cleanup:
     stopLoading(ret == AOF_OK || ret == AOF_TRUNCATED);
+    serverLog(LL_NOTICE, "All files loaded in %lld microseconds", ustime() - load_start);
     return ret;
 }
 

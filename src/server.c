@@ -187,12 +187,19 @@ err:
 
 /* Return the UNIX time in microseconds */
 long long ustime(void) {
-    struct timeval tv;
+    // struct timeval tv;
+    // long long ust;
+
+    // gettimeofday(&tv, NULL);
+    // ust = ((long long)tv.tv_sec)*1000000;
+    // ust += tv.tv_usec;
+    // return ust;
+    struct timespec ts;
     long long ust;
 
-    gettimeofday(&tv, NULL);
-    ust = ((long long)tv.tv_sec)*1000000;
-    ust += tv.tv_usec;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    ust = ((long long)ts.tv_sec)*1000000;
+    ust += ts.tv_nsec/1000;
     return ust;
 }
 
