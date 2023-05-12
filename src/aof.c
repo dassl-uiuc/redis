@@ -2453,36 +2453,36 @@ int rewriteAppendOnlyFileBackground(void) {
         return C_ERR;
     }
     server.stat_aof_rewrites++;
-    if ((childpid = redisFork(CHILD_TYPE_AOF)) == 0) {
-        char tmpfile[256];
+    // if ((childpid = redisFork(CHILD_TYPE_AOF)) == 0) {
+    //     char tmpfile[256];
 
-        /* Child */
-        redisSetProcTitle("redis-aof-rewrite");
-        redisSetCpuAffinity(server.aof_rewrite_cpulist);
-        snprintf(tmpfile,256,"temp-rewriteaof-bg-%d.rdb", (int) getpid());
-        if (rewriteAppendOnlyFile(tmpfile) == C_OK) {
-            serverLog(LL_NOTICE,
-                "Successfully created the temporary AOF base file %s", tmpfile);
-            sendChildCowInfo(CHILD_INFO_TYPE_AOF_COW_SIZE, "AOF rewrite");
-            exitFromChild(0);
-        } else {
-            exitFromChild(1);
-        }
-    } else {
-        /* Parent */
-        if (childpid == -1) {
-            server.aof_lastbgrewrite_status = C_ERR;
-            serverLog(LL_WARNING,
-                "Can't rewrite append only file in background: fork: %s",
-                strerror(errno));
-            return C_ERR;
-        }
-        serverLog(LL_NOTICE,
-            "Background append only file rewriting started by pid %ld",(long) childpid);
-        server.aof_rewrite_scheduled = 0;
-        server.aof_rewrite_time_start = time(NULL);
-        return C_OK;
-    }
+    //     /* Child */
+    //     redisSetProcTitle("redis-aof-rewrite");
+    //     redisSetCpuAffinity(server.aof_rewrite_cpulist);
+    //     snprintf(tmpfile,256,"temp-rewriteaof-bg-%d.rdb", (int) getpid());
+    //     if (rewriteAppendOnlyFile(tmpfile) == C_OK) {
+    //         serverLog(LL_NOTICE,
+    //             "Successfully created the temporary AOF base file %s", tmpfile);
+    //         sendChildCowInfo(CHILD_INFO_TYPE_AOF_COW_SIZE, "AOF rewrite");
+    //         exitFromChild(0);
+    //     } else {
+    //         exitFromChild(1);
+    //     }
+    // } else {
+    //     /* Parent */
+    //     if (childpid == -1) {
+    //         server.aof_lastbgrewrite_status = C_ERR;
+    //         serverLog(LL_WARNING,
+    //             "Can't rewrite append only file in background: fork: %s",
+    //             strerror(errno));
+    //         return C_ERR;
+    //     }
+    //     serverLog(LL_NOTICE,
+    //         "Background append only file rewriting started by pid %ld",(long) childpid);
+    //     server.aof_rewrite_scheduled = 0;
+    //     server.aof_rewrite_time_start = time(NULL);
+    //     return C_OK;
+    // }
     return C_OK; /* unreached */
 }
 
