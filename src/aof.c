@@ -1381,6 +1381,8 @@ int loadSingleAppendOnlyFile(char *filename) {
     off_t last_progress_report_size = 0;
     int ret = AOF_OK;
 
+    long long start = ustime();
+
     sds aof_filepath = makePath(server.aof_dirname, filename);
     size_t len = strlen(aof_filepath);
     FILE *fp;
@@ -1389,6 +1391,7 @@ int loadSingleAppendOnlyFile(char *filename) {
     } else {
         fp = fopen(aof_filepath, "r");
     }
+    printf("after open %lld us\n", ustime() - start);
     if (fp == NULL) {
         int en = errno;
         if (redis_stat(aof_filepath, &sb) == 0 || errno != ENOENT) {
