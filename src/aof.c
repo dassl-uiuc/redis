@@ -2483,6 +2483,7 @@ int rewriteAppendOnlyFileBackground(void) {
     //     server.aof_rewrite_time_start = time(NULL);
     //     return C_OK;
     // }
+    backgroundRewriteDoneHandler(0, 0);
     return C_OK; /* unreached */
 }
 
@@ -2600,6 +2601,7 @@ void backgroundRewriteDoneHandler(int exitcode, int bysignal) {
         new_base_filepath = makePath(server.aof_dirname, new_base_filename);
 
         /* Rename the temporary aof file to 'new_base_filename'. */
+        /*
         latencyStartMonitor(latency);
         if (rename(tmpfile, new_base_filepath) == -1) {
             serverLog(LL_WARNING,
@@ -2617,6 +2619,7 @@ void backgroundRewriteDoneHandler(int exitcode, int bysignal) {
         latencyAddSampleIfNeeded("aof-rename", latency);
         serverLog(LL_NOTICE,
             "Successfully renamed the temporary AOF base file %s into %s", tmpfile, new_base_filename);
+        */
 
         /* Rename the temporary incr aof file to 'new_incr_filename'. */
         if (server.aof_state == AOF_WAIT_REWRITE) {
